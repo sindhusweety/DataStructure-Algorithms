@@ -5,7 +5,7 @@ def gift_distribution(e, a, temp):
     if e in a:
         a.remove(e)
         temp.append(e)
-        return loop(e*e, a, temp)
+        return gift_distribution(e*e, a, temp)
     else:
         return a, temp
 
