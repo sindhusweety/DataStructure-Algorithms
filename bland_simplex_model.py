@@ -77,7 +77,7 @@ class BlandSimplex:
         pivot_row = list()
         leaving_row_indx = 0
         for r_indx, r_coef in enumerate(self.stdform.rows_lhs):
-            print("row ", r_coef, "coef", r_coef[entering_idx], 'row"s index', r_indx, 'rhs value ', self.stdform.rhs[r_indx + 1])
+            #print("row ", r_coef, "coef", r_coef[entering_idx], 'row"s index', r_indx, 'rhs value ', self.stdform.rhs[r_indx + 1])
             if r_coef[entering_idx] > 0:  # coefficient in l.h.s should be greater than 0
                 ratio = round(self.stdform.rhs[r_indx + 1] / r_coef[entering_idx], 2)
                 if r_indx == 0:
@@ -107,10 +107,10 @@ class BlandSimplex:
 
 
             entering_value = self.stdform.row_0_lhs[entering_idx]
-            print('-------------------------------------------------------------------')
-            print('Minimum ratio :',  MIN, 'Pivot"s row :', pivot_row,'Pivot :',pivot, 'Leaving variable"s index', leaving_row_indx,
-                  'Leaving variable :',leaving_var, "Entering Varaible's index :" , entering_idx," Entering Variable : " , ( self.stdform.variables[entering_idx] ,entering_value))
-            print('--------------------------------------------------------------------')
+            #print('-------------------------------------------------------------------')
+            #print('Minimum ratio :',  MIN, 'Pivot"s row :', pivot_row,'Pivot :',pivot, 'Leaving variable"s index', leaving_row_indx,
+                  #'Leaving variable :',leaving_var, "Entering Varaible's index :" , entering_idx," Entering Variable : " , ( self.stdform.variables[entering_idx] ,entering_value))
+            #print('--------------------------------------------------------------------')
             #########
             #self.tabluea_calculations()
             multiplied_row_0  = [__i * pivot  for __index, __i in enumerate(self.stdform.row_0_lhs)]
@@ -134,7 +134,7 @@ class BlandSimplex:
             for __rindex, __rs in enumerate(self.stdform.rows_lhs):
 
                 if __rindex == leaving_row_indx:
-                    print('PIVOT"s Row ', pivot_row)
+                    #print('PIVOT"s Row ', pivot_row)
                     continue
 
 
@@ -154,6 +154,15 @@ class BlandSimplex:
                 self.stdform.rows_lhs[__rindex] = [self.substraction_op(__i, multiplied_neighbour_row, multiplied_pivot_row) for __i in range(len(__rs))]
 
                 self.stdform.rhs[__rindex + 1] = rhs_z_multiply + rhs_pivot_multply
+                print('------------------------------------------------------------------------------------')
+                print()
+                print('Object function', self.stdform.row_0_lhs)
+                print('Constraints lhs ', self.stdform.rows_lhs)
+                print('Constraints rhs ', self.stdform.rhs)
+                print()
+                for i in range(len(self.stdform.basic_variables)):
+                    print(self.stdform.basic_variables[i], ' : ', (self.stdform.rhs[i+1]))
+                print('------------------------------------------------------------------------------------')
                 return self.stdform.row_0_lhs
     def _to_positive_objfun(self):
 
@@ -161,26 +170,36 @@ class BlandSimplex:
             for entering_idx, coef_row0 in enumerate(self.stdform.row_0_lhs):
 
                 if coef_row0 < 0:
-                    print(entering_idx, 'entering', self.stdform.rows_lhs)
+                    #print(entering_idx, 'entering', self.stdform.rows_lhs)
                     res = self.calculate_ratio_quantities_replacements(entering_idx)
                     if res == None:
+                        print('------------------------------------------------------------------------------------')
+                        print('Final Output')
+                        print('------------------------------------------------------------------------------------')
+
                         print('UNBOUNDED LP')
                         print()
-                        print(self.stdform.row_0_lhs)
-                        print(self.stdform.rows_lhs)
+                        print('Object function', self.stdform.row_0_lhs)
+                        print('Constraints lhs ', self.stdform.rows_lhs)
+                        print('Constraints rhs ', self.stdform.rhs)
                         self.stdform.basic_variables = ['z'] + self.stdform.basic_variables
                         for i in range(len(self.stdform.basic_variables)):
-                            print(self.stdform.basic_variables[i], ' : ', round(self.stdform.rhs[i]))
+                            print(self.stdform.basic_variables[i], ' : ', (self.stdform.rhs[i]))
 
                     else:
                         return self._to_positive_objfun()
         else:
-            print('OUTPUT')
-            print(self.stdform.row_0_lhs)
-            print(self.stdform.rows_lhs)
+            print("---------------------------------------------------------------------------------------------------")
+            print('Final Output')
+            print('---------------------------------------------------------------------------------------------------')
+
+            print()
+            print('Object function', self.stdform.row_0_lhs)
+            print('Constraints lhs ', self.stdform.rows_lhs)
+            print('Constraints rhs ', self.stdform.rhs)
             self.stdform.basic_variables = ['z'] + self.stdform.basic_variables
             for i in range(len(self.stdform.basic_variables)):
-                print(self.stdform.basic_variables[i], ' : ', round(self.stdform.rhs[i]))
+                print(self.stdform.basic_variables[i], ' : ', (self.stdform.rhs[i]))
 
 
 BlandSimplex()
