@@ -17,6 +17,8 @@ max z = 36x_1 + 30x_2-3x_3-4x3
 st : x1 +x2-x3 <= 5
 6x1+5x2-x4 <=10
 '''
+import pandas as pd
+
 
 class Arguments:
     def __init__(self):
@@ -28,9 +30,9 @@ class Arguments:
           x_1, x_2 >= 0
         '''
         self.equations = ['x_1 + x_2 <= 6', 'x_1 - x_2 <= 0']
-        self.obj_atrributes = [36, 30, -3, -4]       #[5, 2] #an array of objective function coefficients----------5x_1 + 2x_2
-        self.decision_variable_rhs=[5, 10]   #[6, 0] # right-hand side entries
-        self.decision_variable_lhs = [[1, 1, -1, 0], [6, 5, 0, -1]] #[[1, 1],[1, -1 ]] #coefficients for the left-hand-sides of the constraints
+        self.obj_atrributes =  [3, 2, 1]      #[5, 2] #an array of objective function coefficients----------5x_1 + 2x_2
+        self.decision_variable_rhs=[3, 5]   #[6, 0] # right-hand side entries
+        self.decision_variable_lhs =  [[2, 3, 2], [-1, 1, 1]]  #[[1, 1],[1, -1 ]] #coefficients for the left-hand-sides of the constraints
         self.no_equations = len(self.decision_variable_lhs)
         self.no_variables = len(self.decision_variable_lhs[0])
         self.lowbound = "x1, x2 >= 0"
@@ -51,6 +53,8 @@ class ConvertIntoStandardForm:
             cof[ self.obj.no_variables + idx + 1] = 1  # 10
                                                        # 01
         self.variables = ['z'] + ['x_'+str(i+1) for i in range(self.obj.no_variables)] + self.basic_variables
+        self.table_columns = self.variables + ['rhs', 'BV']
+
 
 class BlandSimplex:
     def __init__(self):
@@ -59,11 +63,24 @@ class BlandSimplex:
         print('--------------------------------------------------------------------------')
         print('L.H.S of Objective Function"s Coefficients ', self.stdform.row_0_lhs)
         print('R.H.S :', self.stdform.rhs)
-        print('Intial Basic Variables ', self.stdform.basic_variables)
+        print('Initial Basic Variables ', self.stdform.basic_variables)
         print('L.H.S of Constraints" Coefficients : ', self.stdform.rows_lhs)
         print('Basic Variables ', self.stdform.basic_variables)
         print('Variables are ', self.stdform.variables)
+        print('table columns :', self.stdform.table_columns )
         print('---------------------------------------------------------------------------')
+
+        print('Initial Stage ...')
+
+        table_rows = [self.stdform.row_0_lhs + [self.stdform.rhs[0]] + ['z']] + [
+            self.stdform.rows_lhs[i] + [self.stdform.rhs[i + 1]] + [self.stdform.basic_variables[i]]
+            for i in range(len(self.stdform.rows_lhs))]
+
+        df = pd.DataFrame(table_rows,
+                          columns=self.stdform.table_columns)
+        df.style.set_properties(**{'text-align': 'center'})
+
+        print(df)
 
         self._to_positive_objfun()
 
@@ -76,11 +93,12 @@ class BlandSimplex:
         MIN = 0
         pivot_row = list()
         leaving_row_indx = 0
+        idnx = 0
         for r_indx, r_coef in enumerate(self.stdform.rows_lhs):
             #print("row ", r_coef, "coef", r_coef[entering_idx], 'row"s index', r_indx, 'rhs value ', self.stdform.rhs[r_indx + 1])
             if r_coef[entering_idx] > 0:  # coefficient in l.h.s should be greater than 0
                 ratio = round(self.stdform.rhs[r_indx + 1] / r_coef[entering_idx], 2)
-                if r_indx == 0:
+                if idnx == 0:
                     MIN = ratio
                     pivot_row = r_coef
                     leaving_row_indx = r_indx
@@ -89,6 +107,8 @@ class BlandSimplex:
                         pivot_row = r_coef
                         MIN = ratio
                         leaving_row_indx = r_indx
+                idnx += 1
+        #print(MIN, pivot_row , leaving_row_indx, self.stdform.basic_variables[leaving_row_indx])
         if pivot_row:
             return MIN, pivot_row , leaving_row_indx, self.stdform.basic_variables[leaving_row_indx]
 
@@ -155,20 +175,22 @@ class BlandSimplex:
 
                 self.stdform.rhs[__rindex + 1] = rhs_z_multiply + rhs_pivot_multply
                 print('------------------------------------------------------------------------------------')
-                print()
-                print('Object function', self.stdform.row_0_lhs)
-                print('Constraints lhs ', self.stdform.rows_lhs)
-                print('Constraints rhs ', self.stdform.rhs)
-                print()
-                for i in range(len(self.stdform.basic_variables)):
-                    print(self.stdform.basic_variables[i], ' : ', (self.stdform.rhs[i+1]))
                 print('------------------------------------------------------------------------------------')
-                return self.stdform.row_0_lhs
+                table_rows = [self.stdform.row_0_lhs + [self.stdform.rhs[0]] + ['z']] + [
+                    self.stdform.rows_lhs[i] + [self.stdform.rhs[i + 1]] + [self.stdform.basic_variables[i]]
+                    for i in range(len(self.stdform.rows_lhs))]
+
+                df = pd.DataFrame(table_rows,
+                                  columns=self.stdform.table_columns)
+                df.style.set_properties(**{'text-align': 'center'})
+
+                print(df)
+                print('------------------------------------------------------------------------------------')
+            return self.stdform.row_0_lhs
     def _to_positive_objfun(self):
 
         if [__v for __v in self.stdform.row_0_lhs if __v < 0]:
             for entering_idx, coef_row0 in enumerate(self.stdform.row_0_lhs):
-
                 if coef_row0 < 0:
                     #print(entering_idx, 'entering', self.stdform.rows_lhs)
                     res = self.calculate_ratio_quantities_replacements(entering_idx)
@@ -178,14 +200,15 @@ class BlandSimplex:
                         print('------------------------------------------------------------------------------------')
 
                         print('UNBOUNDED LP')
-                        print()
-                        print('Object function', self.stdform.row_0_lhs)
-                        print('Constraints lhs ', self.stdform.rows_lhs)
-                        print('Constraints rhs ', self.stdform.rhs)
-                        self.stdform.basic_variables = ['z'] + self.stdform.basic_variables
-                        for i in range(len(self.stdform.basic_variables)):
-                            print(self.stdform.basic_variables[i], ' : ', (self.stdform.rhs[i]))
 
+                        table_rows = [self.stdform.row_0_lhs + [self.stdform.rhs[0]] + ['z']] + [ self.stdform.rows_lhs[i] + [self.stdform.rhs[i+1]] + [self.stdform.basic_variables[i]]
+                                                                                           for i in range(len(self.stdform.rows_lhs)) ]
+
+                        df = pd.DataFrame(table_rows,
+                                          columns=self.stdform.table_columns)
+                        df.style.set_properties(**{'text-align': 'center'})
+
+                        print(df)
                     else:
                         return self._to_positive_objfun()
         else:
@@ -194,12 +217,16 @@ class BlandSimplex:
             print('---------------------------------------------------------------------------------------------------')
 
             print()
-            print('Object function', self.stdform.row_0_lhs)
-            print('Constraints lhs ', self.stdform.rows_lhs)
-            print('Constraints rhs ', self.stdform.rhs)
-            self.stdform.basic_variables = ['z'] + self.stdform.basic_variables
-            for i in range(len(self.stdform.basic_variables)):
-                print(self.stdform.basic_variables[i], ' : ', (self.stdform.rhs[i]))
+
+            table_rows = [self.stdform.row_0_lhs + [self.stdform.rhs[0]] + ['z']] + [
+                self.stdform.rows_lhs[i] + [self.stdform.rhs[i + 1]] + [self.stdform.basic_variables[i]]
+                for i in range(len(self.stdform.rows_lhs))]
+
+            df = pd.DataFrame(table_rows,
+                              columns=self.stdform.table_columns)
+            df.style.set_properties(**{'text-align': 'center'})
+
+            print(df)
 
 
 BlandSimplex()
