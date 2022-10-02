@@ -121,48 +121,91 @@ public class MenuDriven {
             }
             this.dataLog();
 
-            if ((this.input.isEmpty() && this.dataFileObj.containsKey(this.input)) == false){
-                String tname = this.input;
-                this.TABLENAME =  Path.of(this.STORAGE_DIR + "/" + this.input + ".db");
-                Files.createFile(this.TABLENAME);
-                while (this.input.isEmpty() == false){
-                    System.out.println("Enter column name and its length:");
-                    this.readerFun();
-                    if (this.input.isEmpty() == false){
-                        String[] splnc = this.input.split(" ");
-                        ArrayList<String> colname = new ArrayList<>();
-                        ArrayList<String> sze = new ArrayList<>();
+            if (this.input.isEmpty() == false){
+                if ((this.dataFileObj.containsKey(this.input)) == false){
+                    String tname = this.input;
+                    this.TABLENAME =  Path.of(this.STORAGE_DIR + "/" + this.input + ".db");
+                    Files.createFile(this.TABLENAME);
+                    while (this.input.isEmpty() == false){
+                        System.out.println("Enter column name and its length:");
+                        this.readerFun();
+                        if (this.input.isEmpty() == false){
+                            String[] splnc = this.input.split(" ");
+                            ArrayList<String> colname = new ArrayList<>();
+                            ArrayList<String> sze = new ArrayList<>();
 
-                        colname.add(splnc[0].strip());
-                        sze.add(splnc[1].strip());
+                            colname.add(splnc[0].strip());
+                            sze.add(splnc[1].strip());
 
-                        if (this.dataFileObj.containsKey(tname)){
-                            this.dataFileObj.get(tname).get(0).add(splnc[0].strip());
-                            this.dataFileObj.get(tname).get(1).add(splnc[1].strip());
+                            if (this.dataFileObj.containsKey(tname)){
+                                this.dataFileObj.get(tname).get(0).add(splnc[0].strip());
+                                this.dataFileObj.get(tname).get(1).add(splnc[1].strip());
+                            }
+                            else{
+                                this.dataFileObj.put(tname, new ArrayList<>());
+                                this.dataFileObj.get(tname).add(colname);
+                                this.dataFileObj.get(tname).add(sze);
+                            }
+
+
                         }
-                        else{
-                            this.dataFileObj.put(tname, new ArrayList<>());
-                            this.dataFileObj.get(tname).add(colname);
-                            this.dataFileObj.get(tname).add(sze);
-                        }
-
+                    }
+                    if (this.input.isEmpty()){
+                        System.out.println("Table is created Successfully");
+                        System.out.println(this.dataFileObj);
+                        this.writeDBRec();
 
                     }
-                }
-                if (this.input.isEmpty()){
-                    System.out.println("Table is created Successfully");
-                    System.out.println(this.dataFileObj);
-                }
 
-            }else{
-                System.out.println("Table name already exists. So, Please try AGAIN ");
+                }
+                else{
+                    System.out.println("Table name already exists. So, Please try AGAIN ");
+                    this.createTable();
+                }
+            }
+            else {
+                System.out.println("You have entered invalid table name. So, Please try AGAIN ");
                 this.createTable();
             }
+
 
         }
         catch (Exception e){
             this.exceptionFun();
         }
+    }
+
+    public void writeDBRec()  {
+        try{
+
+            FileWriter bw = new FileWriter(this.DBLOG.toFile());
+            FileWriter tb = new FileWriter(this.TABLENAME.toFile());
+            String newLine = System.getProperty("line.separator");
+            String tbcolumns ="";
+            String inputstream = "file name, column name, size"+newLine;
+            bw.write(inputstream);
+            for (String key : this.dataFileObj.keySet() ){
+                ArrayList<ArrayList> v1 = this.dataFileObj.get(key).get(0);
+                ArrayList<ArrayList> v2 = this.dataFileObj.get(key).get(1);
+                for (int i = 0; i < (v1.size()); i++){
+                    //System.out.println(key + "  "+ v1.get(i)+"  "+ v2.get(i));
+                    inputstream = key + ", "+ v1.get(i)+", "+ v2.get(i)+newLine;
+                    tbcolumns += String.valueOf(v1.get(i))+",";
+                    System.out.println(inputstream);
+                    bw.write(inputstream);
+
+                }
+            }
+            bw.close();
+            tb.write(tbcolumns+newLine);
+            tb.close();
+        }
+        catch (Exception e){
+            this.exceptionFun();
+        }
+
+
+
     }
 
 
