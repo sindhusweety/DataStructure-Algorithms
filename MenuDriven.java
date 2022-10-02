@@ -1,5 +1,6 @@
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.EnumMap;
@@ -14,8 +15,9 @@ public class MenuDriven {
     private String CURRENT_DIR = System.getProperty("user.dir");
     private Path STORAGE_DIR = Path.of(CURRENT_DIR + "/DB");
     private Path DBLOG = Path.of(STORAGE_DIR + "/dbFiles.txt");
-    
-    
+    private Path TABLENAME;
+
+
 
     static String CREATE = "CREATE";
     static String INSERT = "INSERT";
@@ -23,21 +25,13 @@ public class MenuDriven {
     static String DELETE = "DELETE";
     static String PURGE = "PURGE";
 
-    /*enum Operations{ CREATE, INSERT, UPDATE, DELETE, PURGE }
-    protected static EnumMap<Operations, Character> enumOperations(){
-            EnumMap<Operations, Character> opObj = new EnumMap<Operations, Character>(Operations.class);
-            opObj.put(Operations.CREATE, 'c');
-            opObj.put(Operations.INSERT, 'i');
-            opObj.put(Operations.UPDATE, 'u');
-            opObj.put(Operations.DELETE, 'd');
-            opObj.put(Operations.PURGE, 'e');
-            return opObj;
-    }*/
+    Dictionary dictionary = new Hashtable();
+    Hashtable<String, ArrayList<ArrayList>> dataFileObj = new Hashtable<String, ArrayList<ArrayList>>();
+
 
     public void readerFun(){
 
         try {
-
         BufferedReader objReader = new BufferedReader(new InputStreamReader(System.in));
         this.input = objReader.readLine();
         }
@@ -64,28 +58,47 @@ public class MenuDriven {
         this.homepage();
     }
 
+    public void genericRead(){
+
+    }
+
     public void dataLog(){
         try{
-            File load_datalog = new File(this.DBLOG.toUri());
-            BufferedReader dataset = new BufferedReader(new FileReader(load_datalog));
-            System.out.println(dataset.readLine());
+
+            BufferedReader new_data = new BufferedReader(Files.newBufferedReader(this.DBLOG));
             String line;
             int count = 0;
-            while ((line = dataset.readLine()) != null){
-                if (count == 1){
-                    System.out.println(line.split(",")[0]);
+            while ((line = new_data.readLine()) != null){
+                if (count >= 1){
+                    String[] l = line.split(",");
+                    String fname = l[0].strip();
+                    String cname = l[1].strip();
+                    String size = l[2].strip();
+                    //this.file_name.add(fname);
+                    //this.column_name.add(cname);
+                    //this.size.add(size);
+
+                    if (this.dataFileObj.containsKey(fname)){
+
+                        this.dataFileObj.get(fname).get(0).add(cname);
+                        this.dataFileObj.get(fname).get(1).add(size);
+
+                    }
+                    else{
+                        ArrayList<String> lcname = new ArrayList<String>();
+                        lcname.add(cname);
+                        ArrayList<String> lsize = new ArrayList<String>();
+                        lsize.add(size);
+                        this.dataFileObj.put(fname, new ArrayList<>());
+                        this.dataFileObj.get(fname).add(lcname);
+                        this.dataFileObj.get(fname).add(lsize);
+                        //System.out.println(this.dataFileObj);
+
+                    }
+
                 }
                 count += 1;
-
             }
-
-
-            /*for (String line : (load_datalog.split(","))){
-                System.out.println(line + "   hiii");
-
-            }*/
-
-
         }
         catch (Exception e){
             this.exceptionFun();
@@ -96,7 +109,7 @@ public class MenuDriven {
         try {
             System.out.println("Enter table name: ");
             this.readerFun();
-            System.out.println(this.input);
+
             //System.out.println(this.CURRENT_DIR +" "+ this.STORAGE_DIR);
 
             if (Files.exists(this.STORAGE_DIR) == false){
@@ -108,7 +121,43 @@ public class MenuDriven {
             }
             this.dataLog();
 
+            if ((this.input.isEmpty() && this.dataFileObj.containsKey(this.input)) == false){
+                String tname = this.input;
+                this.TABLENAME =  Path.of(this.STORAGE_DIR + "/" + this.input + ".db");
+                Files.createFile(this.TABLENAME);
+                while (this.input.isEmpty() == false){
+                    System.out.println("Enter column name and its length:");
+                    this.readerFun();
+                    if (this.input.isEmpty() == false){
+                        String[] splnc = this.input.split(" ");
+                        ArrayList<String> colname = new ArrayList<>();
+                        ArrayList<String> sze = new ArrayList<>();
 
+                        colname.add(splnc[0].strip());
+                        sze.add(splnc[1].strip());
+
+                        if (this.dataFileObj.containsKey(tname)){
+                            this.dataFileObj.get(tname).get(0).add(splnc[0].strip());
+                            this.dataFileObj.get(tname).get(1).add(splnc[1].strip());
+                        }
+                        else{
+                            this.dataFileObj.put(tname, new ArrayList<>());
+                            this.dataFileObj.get(tname).add(colname);
+                            this.dataFileObj.get(tname).add(sze);
+                        }
+
+
+                    }
+                }
+                if (this.input.isEmpty()){
+                    System.out.println("Table is created Successfully");
+                    System.out.println(this.dataFileObj);
+                }
+
+            }else{
+                System.out.println("Table name already exists. So, Please try AGAIN ");
+                this.createTable();
+            }
 
         }
         catch (Exception e){
@@ -140,7 +189,6 @@ public class MenuDriven {
                 System.out.println((mapOp.get(op_symbol)) + " operation has been chosen");
                 //System.out.println((Operations.CREATE).getClass().getName());
                 if (mapOp.get(op_symbol) == CREATE){
-                    System.out.println("hi");
                     this.createTable();
 
                 }
