@@ -25,6 +25,8 @@ public class MenuDriven {
     static String DELETE = "DELETE";
     static String PURGE = "PURGE";
 
+    ArrayList<String> tb_columns = new ArrayList<String>();
+
     Dictionary dictionary = new Hashtable();
     Hashtable<String, ArrayList<ArrayList>> dataFileObj = new Hashtable<String, ArrayList<ArrayList>>();
 
@@ -138,11 +140,13 @@ public class MenuDriven {
                             sze.add(splnc[1].strip());
 
                             if (this.dataFileObj.containsKey(tname)){
+                                this.tb_columns.add(splnc[0].strip());
                                 this.dataFileObj.get(tname).get(0).add(splnc[0].strip());
                                 this.dataFileObj.get(tname).get(1).add(splnc[1].strip());
                             }
                             else{
                                 this.dataFileObj.put(tname, new ArrayList<>());
+                                this.tb_columns.add(splnc[0].strip());
                                 this.dataFileObj.get(tname).add(colname);
                                 this.dataFileObj.get(tname).add(sze);
                             }
@@ -151,20 +155,33 @@ public class MenuDriven {
                         }
                     }
                     if (this.input.isEmpty()){
-                        System.out.println("Table is created Successfully");
-                        System.out.println(this.dataFileObj);
+                        System.out.println("------------------------------------------------------------");
+                        System.out.println("************Table is created Successfully********************");
+                        //System.out.println(this.dataFileObj);
                         this.writeDBRec();
+                        System.out.println("------------------------------------------------------------");
+
+
+                        System.out.println("Redirecting to Home Page..");
+                        System.out.println("------------------------------------------------------------");
+                        System.out.println("------------------------------------------------------------");
+
+                        this.homepage();
 
                     }
 
                 }
                 else{
+                    System.out.println("------------------------------------------------------------");
                     System.out.println("Table name already exists. So, Please try AGAIN ");
+                    System.out.println("------------------------------------------------------------");
                     this.createTable();
                 }
             }
             else {
+                System.out.println("------------------------------------------------------------");
                 System.out.println("You have entered invalid table name. So, Please try AGAIN ");
+                System.out.println("------------------------------------------------------------");
                 this.createTable();
             }
 
@@ -181,7 +198,7 @@ public class MenuDriven {
             FileWriter bw = new FileWriter(this.DBLOG.toFile());
             FileWriter tb = new FileWriter(this.TABLENAME.toFile());
             String newLine = System.getProperty("line.separator");
-            String tbcolumns ="";
+            String tbcolumns = String.valueOf(this.tb_columns);
             String inputstream = "file name, column name, size"+newLine;
             bw.write(inputstream);
             for (String key : this.dataFileObj.keySet() ){
@@ -190,15 +207,17 @@ public class MenuDriven {
                 for (int i = 0; i < (v1.size()); i++){
                     //System.out.println(key + "  "+ v1.get(i)+"  "+ v2.get(i));
                     inputstream = key + ", "+ v1.get(i)+", "+ v2.get(i)+newLine;
-                    tbcolumns += String.valueOf(v1.get(i))+",";
+                    //tbcolumns += String.valueOf(v1.get(i))+",";
                     System.out.println(inputstream);
                     bw.write(inputstream);
 
                 }
             }
             bw.close();
+
             tb.write(tbcolumns+newLine);
             tb.close();
+            this.tb_columns = new ArrayList<>();
         }
         catch (Exception e){
             this.exceptionFun();
