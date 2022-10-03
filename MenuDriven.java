@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.*;
 import java.io.*;
+import java.util.function.UnaryOperator;
 
 public class MenuDriven {
 
@@ -246,7 +247,7 @@ public class MenuDriven {
                 ArrayList<ArrayList> v2 = this.dataFileObj.get(key).get(1);
                 for (int i = 0; i < (v1.size()); i++){
                     //System.out.println(key + "  "+ v1.get(i)+"  "+ v2.get(i));
-                    inputstream =key + ", "+ v1.get(i)+", "+ v2.get(i)+newLine;
+                    inputstream =key + ","+ v1.get(i)+","+ v2.get(i)+newLine;
                     bw.write(inputstream);
 
                 }
@@ -270,7 +271,7 @@ public class MenuDriven {
             String tbcolumns = this.tb_columns.get(0);
 
             for (int i = 1; i<this.tb_columns.size(); i++){
-                tbcolumns +=", " + this.tb_columns.get(i);
+                tbcolumns +="," + this.tb_columns.get(i);
             }
             tbcolumns = tbcolumns+newLine;
 
@@ -285,6 +286,33 @@ public class MenuDriven {
         }
 
     }
+
+    public void tableReplace(){
+        try {
+            tb = new FileWriter(this.TABLENAME.toFile());
+            String newLine = System.getProperty("line.separator");
+            String tbcolumns = "";
+            for (int i = 0; i<this.tableRecords.size(); i++){
+                String subtbcolumns = String.valueOf( this.tableRecords.get(i).get(0));
+                for (int x = 1;  x <  this.tableRecords.get(i).size(); x++ ){
+                    subtbcolumns += ","+this.tableRecords.get(i).get(x);
+                }
+                tbcolumns = subtbcolumns+newLine ;
+                tb.write(tbcolumns);
+            }
+
+            tb.close();
+            this.tb_columns.clear();
+            this.tableRecords.clear();
+
+
+        }
+
+        catch (Exception e){
+            this.exceptionFun();
+        }
+    }
+
     public void tableRecordWriter(){
         try {
 
@@ -300,6 +328,11 @@ public class MenuDriven {
 
             }
             this.tableRecords.add(this.tb_columns);
+            //System.out.println(this.tableRecords);
+            this.tableReplace();
+            //System.out.println(this.tableRecords);
+            /*
+
 
             tb = new FileWriter(this.TABLENAME.toFile());
             String newLine = System.getProperty("line.separator");
@@ -317,6 +350,8 @@ public class MenuDriven {
             tb.close();
             this.tb_columns.clear();
             this.tableRecords.clear();
+
+             */
 
         }
         catch (Exception e){
@@ -425,7 +460,7 @@ public class MenuDriven {
             int no_char = cell.strip().length();
             String spaces = " ";
             int count = 0;
-            while (count < (this.MAX-no_char-1)){
+            while (count < (this.MAX-no_char-2)){
                 spaces += " ";
                 count += 1;
             }
@@ -437,7 +472,7 @@ public class MenuDriven {
     public String dashingFun(){
         String dashes = "";
         int count = 0;
-        while (count < ((this.MAX * this.NO_COLS)+this.NO_COLS+3)){
+        while (count < ((this.MAX * this.NO_COLS)+this.NO_COLS+1)){
             dashes += "-";
             count += 1;
         }
@@ -475,7 +510,7 @@ public class MenuDriven {
                 String[] l = line.split(",");
                 ArrayList<String> al = new ArrayList<String>();
                 for (int i = 0; i < l.length; i++) {
-                    al.add(l[i]);
+                    al.add(l[i].strip()); //added strp
                 }
                 this.tableRecords.add(al);
             }
@@ -510,7 +545,9 @@ public class MenuDriven {
     //-----------------------------------------------------------------------------------------------------------------
     public void printFile(){
         try{
-
+            this.dataFileObj.clear();
+            this.tableRecords.clear();
+            this.tb_columns.clear();
             System.out.println("Enter All to disaply all tables or Enter table name to display: ");
             this.readerFun();
             this.dataLog();
@@ -519,7 +556,9 @@ public class MenuDriven {
                 if (this.dataFileObj.containsKey(this.input.strip())){
 
                     this.tableProcessing();
-
+                    this.dataFileObj.clear();
+                    this.tableRecords.clear();
+                    this.tb_columns.clear();
                     System.out.println("------------------------------------------------------------");
                     System.out.println(" Type 'Yes' or 'No' (y/n) to Continue:");
                     this.readerFun();
@@ -542,9 +581,20 @@ public class MenuDriven {
                             this.dataFileObj.clear();
                             this.dataLog();
                             this.tableProcessing();
-
                         }
-
+                    }
+                    this.dataFileObj.clear();
+                    this.tableRecords.clear();
+                    this.tb_columns.clear();
+                    System.out.println("------------------------------------------------------------");
+                    System.out.println(" Type 'Yes' or 'No' (y/n) to Continue:");
+                    this.readerFun();
+                    if (this.input.toLowerCase().startsWith("y")){
+                        System.out.println("------------------------------------------------------------");
+                        this.printFile();
+                    }
+                    else{
+                        this.redirectToHome();
                     }
 
                 }else{
@@ -565,6 +615,171 @@ public class MenuDriven {
         catch (Exception e){
             this.exceptionFun();
         }
+    }
+
+    public void listArrToHashMap(){
+        this.dataFileObj.clear();
+        ArrayList<String> value;
+        for (int i = 0; i < this.tableRecords.size(); i++){
+            String  tname = String.valueOf(this.tableRecords.get(i).get(0));
+            String filename = String.valueOf(this.tableRecords.get(i).get(1));
+            String size = String.valueOf(this.tableRecords.get(i).get(2));
+            ArrayList<String> colname = new ArrayList<>();
+            ArrayList<String> sze = new ArrayList<>();
+            colname.add(filename.strip());
+            sze.add(size.strip());
+
+            if (this.dataFileObj.containsKey(tname)){
+                this.tb_columns.add(filename.strip());
+                this.dataFileObj.get(tname).get(0).add(filename.strip());
+                this.dataFileObj.get(tname).get(1).add(size.strip());
+            }
+            else{
+                this.dataFileObj.put(tname, new ArrayList<>());
+                this.tb_columns.add(filename.strip());
+                this.dataFileObj.get(tname).add(colname);
+                this.dataFileObj.get(tname).add(sze);
+            }
+        }
+        System.out.println(dataFileObj);
+
+
+
+
+    }
+
+    public void hashMapToListArr(String filename, String colname){
+        this.tableRecords.clear();
+        this.tb_columns.clear();
+        for (String key : this.dataFileObj.keySet()){
+            for (int i=0; i < this.dataFileObj.get(key).get(0).size(); i++){
+                ArrayList<String> inputstream = new ArrayList<>();
+                String recColn = String.valueOf( this.dataFileObj.get(key).get(0).get(i)).strip();
+                String recSize = String.valueOf(this.dataFileObj.get(key).get(1).get(i)).strip();
+                if ((filename.equals(key)) & (colname.equals(recColn)) ){
+                    inputstream.add("#"+key);
+                    inputstream.add(recColn);
+                    inputstream.add(recSize);
+                }
+                else{
+                    inputstream.add(key);
+                    inputstream.add(recColn);
+                    inputstream.add(recSize);
+                }
+                this.tableRecords.add(inputstream);
+
+            }
+
+
+        }
+
+    }
+    public void removeChoiceOrMenuCall(){
+        System.out.println("------------------------------------------------------------");
+        System.out.println(" Type 'Yes' or 'No' (y/n) to Continue:");
+        this.readerFun();
+        if (this.input.toLowerCase().startsWith("y")){
+            System.out.println("------------------------------------------------------------");
+            this.removeObject();
+        }
+        else{
+            this.redirectToHome();
+        }
+    }
+    public void removeObject(){
+        try{
+            System.out.println("Enter the table to perform remove operation: ");
+            this.readerFun();
+            this.dataLog();
+            if (this.input.toLowerCase().strip().startsWith("dbfiles")){
+               System.out.println("Enter the file's name:");
+               this.readerFun();
+               Boolean chkfilename = this.dataFileObj.containsKey(this.input.strip());
+               while (chkfilename == false){
+                   System.out.println("Entered Filename not found. Please try Again");
+                   System.out.println("Enter the file's name");
+                   this.readerFun();
+                   chkfilename = this.dataFileObj.containsKey(this.input.strip());
+               }
+               String filename = this.input.strip();
+               ArrayList<ArrayList> value = this.dataFileObj.get(this.input.strip());
+
+
+               System.out.println("Enter column's name");
+               this.readerFun();
+               Boolean chkcolname =value.get(0).contains(this.input.strip());
+               while (chkcolname == false){
+                    System.out.println("Entered column not found. Please try Again");
+                    System.out.println("Enter the column's name");
+                    this.readerFun();
+                    chkcolname =value.get(0).contains(this.input.strip());
+                }
+               String column = this.input.strip();
+               this.hashMapToListArr(filename, column);
+               this.listArrToHashMap();
+               this.writeDBRec();
+
+               this.dataFileObj.clear();
+               this.tableRecords.clear();
+               this.removeChoiceOrMenuCall();
+
+            } else if (this.dataFileObj.containsKey(this.input.strip())){
+                this.TABLENAME =  Path.of(this.STORAGE_DIR + "/" + this.input.strip() + ".db");
+                this.tableRecords.clear();
+                this.tb_columns.clear();
+                this.loadTableRec();
+                System.out.println(this.tableRecords);
+                System.out.println("Enter "+this.tableRecords.get(0).get(0) +":");
+                this.readerFun();
+                //String ipStream = this.input.strip();
+                this.tb_columns.add(this.input.strip());
+                for (int i=1; i< this.tableRecords.get(0).size(); i++ ){
+
+                    System.out.println("Enter "+this.tableRecords.get(0).get(i) +":");
+                    this.readerFun();
+                    //ipStream+=","+this.input.strip();
+                    this.tb_columns.add(this.input.strip());
+
+                }
+                //this.tb_columns.add(ipStream);
+                System.out.println(this.tb_columns);
+                int rec_index = this.tableRecords.indexOf(this.tb_columns);
+                if (rec_index >= 0 ){
+                    System.out.println(this.tableRecords.indexOf(this.tb_columns));
+                    this.tableRecords.remove(rec_index);
+                    ArrayList<String> temp = new ArrayList<>();
+                    for (int i =0; i<this.tb_columns.size(); i++){
+                        if (i==0){
+                            temp.add("#"+this.tb_columns.get(i));
+                        }
+                        else {
+                            temp.add(this.tb_columns.get(i));
+                        }
+                    }
+                    this.tableRecords.add(temp);
+                    System.out.println(tableRecords);
+                    this.tableReplace();
+                    System.out.println(tableRecords);
+                    this.tableRecords.clear();
+                    this.tb_columns.clear();
+                    this.removeChoiceOrMenuCall();
+                }
+
+            } else{
+                this.inValidTableNameMsg();
+                this.removeObject();
+
+            }
+
+        }
+        catch (Exception e)
+        {
+            this.exceptionFun();
+        }
+    }
+    //--------------------------------------------------------------------------------------------
+    public void exitOperation(){
+        
     }
 
 
@@ -604,7 +819,7 @@ public class MenuDriven {
 
                 }
                 else if (mapOp.get(op_symbol) == REMOVE){
-                    System.out.println("hiii");
+                    this.removeObject();
 
                 }
                 else if (mapOp.get(op_symbol) == EXIT){
