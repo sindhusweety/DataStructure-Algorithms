@@ -141,6 +141,30 @@ public class MenuDriven {
                         if (this.input.strip().isEmpty() == false){
                             String[] splnc = this.input.split(" ");
 
+                            //added
+                            while (splnc.length != 2){
+                                System.out.println("-----------------------------------------------------------------");
+                                System.out.println("Invalid Input. So, Please try Again");
+                                System.out.println("-----------------------------------------------------------------");
+                                System.out.println("Enter column name and its length:");
+                                this.readerFun();
+                                splnc = this.input.split(" ");
+
+
+                            }
+                            int chk_size = Integer.parseInt(this.input.split(" ")[1].strip());
+                            while (chk_size <= 0){
+                                System.out.println("-----------------------------------------------------------------");
+                                System.out.println("Entered column's size should be above 0");
+                                System.out.println("-----------------------------------------------------------------");
+                                System.out.println("Enter column name and its length:");
+                                this.readerFun();
+                                splnc = this.input.split(" ");
+                                chk_size = Integer.parseInt(this.input.split(" ")[1].strip());
+
+                            }
+
+
                             ArrayList<String> colname = new ArrayList<>();
                             ArrayList<String> sze = new ArrayList<>();
 
@@ -171,20 +195,17 @@ public class MenuDriven {
                         System.out.println("************Table is created Successfully********************");
                         System.out.println("------------------------------------------------------------");
                         //homepage();
-
+                        this.dataFileObj.clear(); //must be cleared
+                        this.tb_columns.clear();
                         System.out.println("If you would like to create more tables, Type 'Yes' or 'No' (y/n):");
                         this.readerFun();
                         if (this.input.toLowerCase().startsWith("y")){
                             System.out.println("------------------------------------------------------------");
+
                             this.createTable();
                         }
                         else{
-                            System.out.println("------------------------------------------------------------");
-                            System.out.println("Redirecting to Home Page..");
-                            System.out.println("------------------------------------------------------------");
-                            System.out.println("------------------------------------------------------------");
-
-                            this.homepage();
+                            this.redirectToHome();
                         }
 
                     }
@@ -231,7 +252,7 @@ public class MenuDriven {
                 }
             }
             bw.close();
-            this.dataFileObj.clear(); //important clear
+            this.dataFileObj.clear(); //must be cleared
 
         }
         catch (Exception e){
@@ -295,6 +316,7 @@ public class MenuDriven {
 
             tb.close();
             this.tb_columns.clear();
+            this.tableRecords.clear();
 
         }
         catch (Exception e){
@@ -346,6 +368,9 @@ public class MenuDriven {
                     System.out.println("------------------------------------------------------------");
 
                     this.tableRecordWriter();
+                    this.tb_columns.clear();
+                    this.tableRecords.clear();
+
                     System.out.println("************Record is inserted Successfully********************");
                     System.out.println("------------------------------------------------------------");
                     System.out.println("If you would like to create more tables, Type 'Yes' or 'No' (y/n):");
@@ -355,12 +380,7 @@ public class MenuDriven {
                         this.insertTable();
                     }
                     else{
-                        System.out.println("------------------------------------------------------------");
-                        System.out.println("Redirecting to Home Page..");
-                        System.out.println("------------------------------------------------------------");
-                        System.out.println("------------------------------------------------------------");
-
-                        this.homepage();
+                        this.redirectToHome();
                     }
                 }
                 else{
@@ -388,6 +408,16 @@ public class MenuDriven {
         System.out.println("You have entered invalid table name. So, Please try AGAIN ");
         System.out.println("------------------------------------------------------------");
     }
+
+    public void redirectToHome(){
+
+        System.out.println("------------------------------------------------------------");
+        System.out.println("Redirecting to Home Page..");
+        System.out.println("------------------------------------------------------------");
+        System.out.println("------------------------------------------------------------");
+        this.homepage();
+
+    }
     public String eachRec(ArrayList<String> rec){
         String record = "|";
 
@@ -395,12 +425,11 @@ public class MenuDriven {
             int no_char = cell.strip().length();
             String spaces = " ";
             int count = 0;
-            while (count < (this.MAX-no_char)){
+            while (count < (this.MAX-no_char-1)){
                 spaces += " ";
                 count += 1;
             }
-            record += cell.strip()+ spaces+"|";
-            System.out.println(cell);
+            record +=" " +cell.strip()+ spaces+"|";
         }
 
         return record;
@@ -408,11 +437,11 @@ public class MenuDriven {
     public String dashingFun(){
         String dashes = "";
         int count = 0;
-        while (count < ((this.MAX * this.NO_COLS)+this.NO_COLS+2)){
-            dashes += "_";
+        while (count < ((this.MAX * this.NO_COLS)+this.NO_COLS+3)){
+            dashes += "-";
             count += 1;
         }
-        System.out.println(dashes);
+
         return dashes;
     }
     public void displayTable(){
@@ -426,7 +455,8 @@ public class MenuDriven {
                     System.out.println(dashes);
                 }
                 else{
-                    System.out.println(this.tableRecords.get(i));
+                    String record = this.eachRec(this.tableRecords.get(i));
+                    System.out.println(record);
                     System.out.println(dashes);
                 }
 
@@ -455,9 +485,32 @@ public class MenuDriven {
             this.exceptionFun();
         }
     }
+
+    public void tableProcessing(){
+        this.TABLENAME =  Path.of(this.STORAGE_DIR + "/" + this.input.strip() + ".db");
+
+        ArrayList<ArrayList> value = this.dataFileObj.get(this.input.strip());
+        for (int i=0; i< value.get(0).size(); i++) {
+
+            String cols = String.valueOf(value.get(0).get(i));
+            Integer sze = Integer.valueOf((String) value.get(1).get(i));
+            this.MAX = Math.max(sze, this.MAX);
+
+        }
+
+        this.NO_COLS = value.get(0).size();
+        this.loadTableRec();
+        System.out.println(this.input.strip()+".db");
+        this.displayTable();
+        this.tableRecords.clear();
+        this.dataFileObj.clear();
+        this.MAX = 0;
+        this.NO_COLS = 0;
+    }
     //-----------------------------------------------------------------------------------------------------------------
     public void printFile(){
         try{
+
             System.out.println("Enter All to disaply all tables or Enter table name to display: ");
             this.readerFun();
             this.dataLog();
@@ -465,22 +518,34 @@ public class MenuDriven {
             if (this.input.strip().isEmpty() == false){
                 if (this.dataFileObj.containsKey(this.input.strip())){
 
-                    this.TABLENAME =  Path.of(this.STORAGE_DIR + "/" + this.input.strip() + ".db");
+                    this.tableProcessing();
 
-                    ArrayList<ArrayList> value = this.dataFileObj.get(this.input.strip());
-                    for (int i=0; i< value.get(0).size(); i++) {
-
-                        String cols = String.valueOf(value.get(0).get(i));
-                        Integer sze = Integer.valueOf((String) value.get(1).get(i));
-                        this.MAX = Math.max(sze, this.MAX);
-                        this.NO_COLS += 1;
+                    System.out.println("------------------------------------------------------------");
+                    System.out.println(" Type 'Yes' or 'No' (y/n) to Continue:");
+                    this.readerFun();
+                    if (this.input.toLowerCase().startsWith("y")){
+                        System.out.println("------------------------------------------------------------");
+                        this.printFile();
                     }
-                    this.loadTableRec();
-                    System.out.println("HIIIII"+ this.NO_COLS);
-                    this.displayTable();
+                    else{
+                        this.redirectToHome();
+                    }
 
-                }
-                else if (this.input.strip().toLowerCase() == "all"){
+
+                } else if (this.input.strip().toLowerCase().startsWith("all")){
+                    File f = new File(this.STORAGE_DIR.toUri());
+                    for (File path : f.listFiles()){
+                        String file = path.getName();
+                        if (file.endsWith(".db")){
+                            String input = (file.split(".d")[0]);
+                            this.input = input;
+                            this.dataFileObj.clear();
+                            this.dataLog();
+                            this.tableProcessing();
+
+                        }
+
+                    }
 
                 }else{
                     this.inValidTableNameMsg();
