@@ -331,27 +331,6 @@ public class MenuDriven {
             //System.out.println(this.tableRecords);
             this.tableReplace();
             //System.out.println(this.tableRecords);
-            /*
-
-
-            tb = new FileWriter(this.TABLENAME.toFile());
-            String newLine = System.getProperty("line.separator");
-            String tbcolumns = "";
-
-            for (int i = 0; i<this.tableRecords.size(); i++){
-                String subtbcolumns = String.valueOf( this.tableRecords.get(i).get(0));
-                for (int x = 1;  x <  this.tableRecords.get(i).size(); x++ ){
-                    subtbcolumns += ", "+this.tableRecords.get(i).get(x);
-                }
-                tbcolumns = subtbcolumns+newLine ;
-                tb.write(tbcolumns);
-            }
-
-            tb.close();
-            this.tb_columns.clear();
-            this.tableRecords.clear();
-
-             */
 
         }
         catch (Exception e){
@@ -508,6 +487,7 @@ public class MenuDriven {
             String line;
             while ((line = new_data.readLine())  != null) {
                 String[] l = line.split(",");
+
                 ArrayList<String> al = new ArrayList<String>();
                 for (int i = 0; i < l.length; i++) {
                     al.add(l[i].strip()); //added strp
@@ -688,6 +668,9 @@ public class MenuDriven {
     }
     public void removeObject(){
         try{
+            this.tableRecords.clear();
+            this.tb_columns.clear();
+            this.dataFileObj.clear();
             System.out.println("Enter the table to perform remove operation: ");
             this.readerFun();
             this.dataLog();
@@ -742,10 +725,9 @@ public class MenuDriven {
 
                 }
                 //this.tb_columns.add(ipStream);
-                System.out.println(this.tb_columns);
                 int rec_index = this.tableRecords.indexOf(this.tb_columns);
                 if (rec_index >= 0 ){
-                    System.out.println(this.tableRecords.indexOf(this.tb_columns));
+                    //System.out.println(this.tableRecords.indexOf(this.tb_columns));
                     this.tableRecords.remove(rec_index);
                     ArrayList<String> temp = new ArrayList<>();
                     for (int i =0; i<this.tb_columns.size(); i++){
@@ -759,13 +741,23 @@ public class MenuDriven {
                     this.tableRecords.add(temp);
                     System.out.println(tableRecords);
                     this.tableReplace();
-                    System.out.println(tableRecords);
+                    //System.out.println(tableRecords);
                     this.tableRecords.clear();
                     this.tb_columns.clear();
                     this.removeChoiceOrMenuCall();
                 }
+                else{
+                    System.out.println("------------------------------------------------------------");
+                    System.out.println("Values not found. So, Please try AGAIN ");
+                    System.out.println("------------------------------------------------------------");
+                    this.tableRecords.clear();
+                    this.tb_columns.clear();
+                    this.dataFileObj.clear();
+                    this.removeObject();
+                }
 
             } else{
+
                 this.inValidTableNameMsg();
                 this.removeObject();
 
@@ -779,7 +771,64 @@ public class MenuDriven {
     }
     //--------------------------------------------------------------------------------------------
     public void exitOperation(){
-        
+
+        try {
+            File f = new File(this.STORAGE_DIR.toUri());
+            for (File path : f.listFiles()) {
+                String file = path.getName();
+                if (file.endsWith(".db")) {
+                    String input = (file.split(".d")[0]);
+                    this.input = input;
+                    this.TABLENAME =  Path.of(this.STORAGE_DIR + "/" + this.input.strip() + ".db");
+
+                    this.tableRecords.clear();
+                    this.tb_columns.clear();
+                    this.dataFileObj.clear();
+
+                    this.loadTableRec();
+                    for (int i =0; i<this.tableRecords.size(); i++){
+                        if (this.tableRecords.get(i).get(0).toString().startsWith("#")){
+                            this.tableRecords.remove(i);
+                        }
+                    }
+
+                    System.out.println(tableRecords);
+                    this.tableReplace();
+                    //System.out.println(tableRecords);
+                    this.tableRecords.clear();
+                    this.tb_columns.clear();
+
+
+                }
+                else{
+                    String input = (file.split(".t")[0]);
+                    this.input = input;
+                    this.TABLENAME =  Path.of(this.STORAGE_DIR + "/" + this.input.strip() + ".txt");
+                    this.tableRecords.clear();
+                    this.tb_columns.clear();
+                    this.dataFileObj.clear();
+
+                    this.loadTableRec();
+
+                    for (int i =0; i<this.tableRecords.size(); i++){
+                        if (this.tableRecords.get(i).get(0).toString().startsWith("#")){
+                            this.tableRecords.remove(i);
+                        }
+                    }
+                    System.out.println(tableRecords);
+                    this.tableReplace();
+                    //System.out.println(tableRecords);
+                    this.tableRecords.clear();
+                    this.tb_columns.clear();
+
+                }
+
+
+            }
+
+        }
+        catch (Exception e){
+        }
     }
 
 
@@ -823,7 +872,7 @@ public class MenuDriven {
 
                 }
                 else if (mapOp.get(op_symbol) == EXIT){
-                    System.out.println("hiii");
+                    this.exitOperation();
 
                 }
 
